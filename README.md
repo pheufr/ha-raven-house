@@ -1,25 +1,43 @@
-﻿# Home Assistant Raven House Tools
+# Home Assistant Raven House Tools
 
-This repository ships a single HACS-installed Home Assistant integration, `raven_house_tools`, which is presented in Home Assistant as `Raven House Tools`.
+This repository provides the backend Home Assistant integration `raven_house_tools` (shown in Home Assistant as `Raven House Tools`).
 
-That integration exposes both feature areas as separate config entries:
+It manages the Raven House feature domains:
 
 - `RH Jobs`
 - `RH Quiz`
+- `RH Soundboard` services and runtime state
+
+Dashboard/Lovelace cards now live in the companion repository `ha-raven-house-cards`.
 
 ## Installation
 
 ### HACS
 1. Add this repository as a custom repository in HACS.
-2. Install the repository.
-3. Restart Home Assistant.
-4. Add the `Raven House Tools` integration twice from Settings -> Devices & Services.
-5. Choose `RH Jobs` for job management and `RH Quiz` for quiz management.
+2. Set the repository type to `Integration`.
+3. Install the repository.
+4. Restart Home Assistant.
+5. Add the `Raven House Tools` integration from Settings -> Devices & Services.
+6. Add one entry for `RH Jobs` and one entry for `RH Quiz`.
+
+To use dashboard cards, also install `ha-raven-house-cards` as a separate HACS custom repository of type `Dashboard`.
 
 ### Manual
 1. Copy `custom_components/raven_house_tools` into your Home Assistant `custom_components` directory.
 2. Restart Home Assistant.
-3. Add the `Raven House Tools` integration from Settings -> Devices & Services for each feature you want.
+3. Add the `Raven House Tools` integration from Settings -> Devices & Services.
+
+## Companion Dashboard Cards
+
+Install and manage frontend cards from `ha-raven-house-cards`.
+
+Card resources are provided there as:
+
+- `rh-jobs-card.js`
+- `rh-quiz-card.js`
+- `rh-quiz-master-card.js`
+- `rh-quiz-round-card.js`
+- `rh-soundboard-card.js`
 
 ## Raven House Jobs
 
@@ -38,7 +56,7 @@ Each job becomes one device with these entities:
 - `sensor.rh_jobs_{job_id}_created`
 - `sensor.rh_jobs_{job_id}_priority`
 
-The primary binary sensor also keeps the scheduling metadata and card-friendly attributes such as `image`, `priority`, `trigger_type`, `cron_expression`, and `days_interval`.
+The primary binary sensor keeps scheduling metadata and attributes such as `image`, `priority`, `trigger_type`, `cron_expression`, and `days_interval`.
 
 ### Managing Jobs
 
@@ -46,7 +64,7 @@ Jobs can be managed from the job device page using control entities.
 
 Jobs can also be created via the `raven_house_tools.add_job` service.
 
-To edit or delete an existing job, open the RH Jobs integration options and choose Manage Jobs (Edit/Delete).
+To edit or delete an existing job, open RH Jobs integration options and choose Manage Jobs (Edit/Delete).
 
 Each job supports:
 
@@ -88,20 +106,6 @@ data:
 ```
 
 Use the Actions/Services UI target picker for the job entity and image picker for `image`.
-
-How to upload a new image for selection:
-
-1. In Home Assistant, open Media -> My media.
-2. Choose or create a folder (for example `jobs`).
-3. Click Upload and upload the image file.
-4. Return to the action/service form and pick that image from the media browser.
-
-If you do not see Create folder or Upload in My media:
-
-1. Verify the Local Media integration is installed and loaded.
-2. Place files directly in your Home Assistant config at `/config/media/jobs/` (or another folder under `/config/media/`).
-3. Restart Home Assistant, then reopen the media picker.
-4. Select the image from the media browser, or provide `/media/local/jobs/<filename>` as the value.
 
 ### Example Automations
 
@@ -148,34 +152,12 @@ mode: single
 triggers:
   - trigger: state
     entity_id: binary_sensor.front_door_opening
-    to: "on" # "on" is shown as Open for opening binary_sensors
+    to: "on"
 actions:
   - action: button.press
     target:
       entity_id: button.rh_jobs_96566d0a_complete
 ```
-
-`binary_sensor` entities use `on`/`off` states in automations (`on` is shown as `Open` for `opening` device class sensors).
-
-### Jobs Card
-
-The jobs card is auto-registered by the integration.
-
-```yaml
-type: custom:rh-jobs-card
-show_images: true
-orientation: vertical
-job_entities:
-  - binary_sensor.rh_jobs_trash_day
-  - binary_sensor.rh_jobs_laundry
-```
-
-Jobs card layout options:
-
-- `orientation: vertical` (default) stacks due jobs top-to-bottom.
-- `orientation: horizontal` places jobs in a horizontal wrapping layout.
-- `show_images: true` (default) shows image-only tiles. Jobs without an image show a square icon tile using the job colour.
-- `show_images: false` shows an icon, job name, and last triggered timestamp.
 
 ## Raven House Quiz
 
@@ -196,11 +178,9 @@ Each player becomes one device with these entities:
 - `text.rh_quiz_{player_id}_alias`: update alias
 - `text.rh_quiz_{player_id}_photo`: update image path
 
-The primary total-score entity keeps player metadata in its attributes, including `player_name`, `player_alias`, `player_photo`, `current_round_score`, `last_round_score`, and `enabled`.
-
 ### Managing Players
 
-Players can be managed from each participant's device page using control entities.
+Players can be managed from each participant device page using control entities.
 
 Players can also be created via the `raven_house_tools.add_player` service.
 
@@ -240,65 +220,9 @@ data:
   points: 5
 ```
 
-Update player photo without manually typing a URL:
-
-```yaml
-service: raven_house_tools.update_player_photo
-data:
-  entity_id: sensor.rh_quiz_alice
-  photo: /media/local/players/alice.png
-```
-
-Use the Actions/Services UI target picker for the player entity and image picker for `photo`.
-
-How to upload a new player photo:
-
-1. In Home Assistant, open Media -> My media.
-2. Choose or create a folder (for example `players`).
-3. Click Upload and upload the image file.
-4. Return to the action/service form and pick that image from the media browser.
-
-If you do not see Create folder or Upload in My media:
-
-1. Verify the Local Media integration is installed and loaded.
-2. Place files directly in your Home Assistant config at `/config/media/players/` (or another folder under `/config/media/`).
-3. Restart Home Assistant, then reopen the media picker.
-4. Select the image from the media browser, or provide `/media/local/players/<filename>` as the value.
-
-### Quiz Cards
-
-The quiz cards are auto-registered by the integration.
-
-Quiz summary:
-
-```yaml
-type: custom:rh-quiz-card
-show_winner: true
-show_leaderboard: true
-show_round_leaderboard: true
-show_disabled: false
-max_players: 10
-```
-
-Master control:
-
-```yaml
-type: custom:rh-quiz-master-card
-point_buttons: [5, 10]
-compact: false
-show_photos: true
-```
-
-Round manager:
-
-```yaml
-type: custom:rh-quiz-round-card
-title: Quiz Rounds
-```
-
 ## Raven House Soundboard
 
-The Soundboard feature adds a custom card and services for low-latency short audio effects to media players.
+The soundboard backend provides services and session state used by the Raven House soundboard card.
 
 ### Services
 
@@ -310,66 +234,15 @@ Service domain: `raven_house_tools`
 - `soundboard_disconnect`
 - `soundboard_play_clip`
 
-Recommended flow:
-
-1. Set or select a target media player.
-2. Connect once (optionally with a `dead_air_media` clip).
-3. Set volume from the in-card slider when needed.
-4. Trigger clips repeatedly (direct play mode).
-5. Disconnect when done.
-
-### Soundboard Card
-
-The soundboard card is auto-registered by the integration.
-
-```yaml
-type: custom:rh-soundboard-card
-title: RH Soundboard
-columns: 5
-target: media_player.living_room_speaker
-allow_target_switch: true
-dead_air_media: media-source://media_source/local/soundboard/dead_air.mp3
-clips:
-  - id: air_horn
-    label: Air Horn
-    icon: mdi:bullhorn
-    type: sfx
-    fg_color: "#ffffff"
-    bg_color: "#c0392b"
-    media: media-source://media_source/local/sfx/air_horn.mp3
-  - id: applause
-    label: Applause
-    icon: mdi:hand-clap
-    type: crowd
-    fg_color: "#1f2a44"
-    bg_color: "#f9d976"
-    media: media-source://media_source/local/sfx/applause.mp3
-```
-
-Clip fields:
-
-- `id`: stable identifier for the button
-- `label`: button text
-- `icon`: Material Design icon
-- `type`: clip category/label shown on the button (for example `sfx`, `crowd`, `voice`)
-- `media`: media-source or URL/path to an audio file
-- `fg_color`: optional per-button foreground/text color
-- `bg_color`: optional per-button background color
-
-The card uses direct clip playback, keeps a target selector with connect/disconnect control, and includes an in-card volume slider for the selected target.
-
 Runtime status sensor:
 
 - `sensor.rh_soundboard_session`
 
-The card reads this sensor to reflect live connection state and pending requests.
-
 ## Notes
 
-- The HACS repository installs a single integration package because HACS only manages one `custom_components/<domain>` directory per integration repository.
-- Legacy installs created before the split keep working as a combined entry, but new installs should add separate `RH Jobs` and `RH Quiz` entries.
-- Both feature areas use local brand assets, so Home Assistant 2026.3 or newer is recommended.
-- If the custom cards or logos do not appear immediately after restart, perform a hard browser refresh.
+- This repository is backend-only (`Integration` in HACS).
+- Install `ha-raven-house-cards` separately as `Dashboard` in HACS for UI cards.
+- Home Assistant 2026.3 or newer is recommended.
 
 ## License
 

@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import CONF_FEATURE, DOMAIN, FEATURE_BOTH
 from .entities import async_setup_jobs_services
-from .frontend import async_setup_frontend
 from .quiz_const import DOMAIN as QUIZ_DOMAIN
 from .quiz_entities import async_setup_quiz_services
 from .soundboard import async_setup_soundboard_services, async_unload_soundboard
@@ -29,7 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(QUIZ_DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {}
     hass.data[QUIZ_DOMAIN][entry.entry_id] = {}
-    await async_setup_frontend(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await async_setup_jobs_services(hass)
