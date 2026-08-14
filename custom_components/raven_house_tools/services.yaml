@@ -355,9 +355,18 @@ set_quiz_rounds:
     active_round_index:
       description: Zero-based active round index, or omit to clear the active round
       example: 0
+    round_position_index:
+      description: Zero-based round position to remember while no round is active
+      example: 0
 
 start_new_round:
-  description: Move current round scores into totals and reset the current round
+  description: End the active round and immediately start the next round
+
+end_round:
+  description: End the active round and enter a break between rounds
+
+start_round:
+  description: Start the next round from the remembered round position
 
 start_new_quiz:
   description: Reset all quiz scores to zero

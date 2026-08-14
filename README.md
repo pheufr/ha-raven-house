@@ -208,6 +208,8 @@ Service domain: `raven_house_tools`
 - `use_joker`
 - `set_quiz_rounds`
 - `start_new_round`
+- `end_round`
+- `start_round`
 - `start_new_quiz`
 - `reset_quiz`
 

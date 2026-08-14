@@ -383,12 +383,24 @@
         "active_round_index": {
           "name": "Active Round Index",
           "description": "Zero-based active round index, or omit to clear the active round"
+        },
+        "round_position_index": {
+          "name": "Round Position Index",
+          "description": "Zero-based round position to remember while no round is active"
         }
       }
     },
     "start_new_round": {
       "name": "Start New Round",
-      "description": "Move current round scores into totals and reset the current round"
+      "description": "End the active round and immediately start the next round"
+    },
+    "end_round": {
+      "name": "End Round",
+      "description": "End the active round and enter a break between rounds"
+    },
+    "start_round": {
+      "name": "Start Round",
+      "description": "Start the next round from the remembered round position"
     },
     "start_new_quiz": {
       "name": "Start New Quiz",
