@@ -34,6 +34,7 @@ Install and manage frontend cards from `ha-raven-house-cards`.
 Card resources are provided there as:
 
 - `rh-jobs-card.js`
+- `rh-map-card.js`
 - `rh-quiz-card.js`
 - `rh-quiz-master-card.js`
 - `rh-quiz-round-card.js`
@@ -239,6 +240,59 @@ Service domain: `raven_house_tools`
 Runtime status sensor:
 
 - `sensor.rh_soundboard_session`
+
+## Raven House Maps
+
+The `rh-map-card` (from `ha-raven-house-cards`) renders a GPS route from a polyline-encoded entity as an SVG path, with an optional tile-map background.  It supports `primary` and `secondary` template strings that evaluate `{{ states('sensor.x') }}` and `{{ state_attr('sensor.x', 'attr') }}` expressions client-side.
+
+> **Template note:** Only exact `states('…')` and `state_attr('…', '…')` calls are evaluated inside `{{ }}`.  Jinja2 filters (e.g. `| round`), arithmetic, or `{% if %}` blocks are **not** evaluated by the card and will appear as raw template text.  Use Home Assistant [template sensors](https://www.home-assistant.io/integrations/template/) to pre-compute any conditional or formatted values, then reference those sensors with `states('sensor.name')` in the card config.
+
+### Example — activity map with conditional display
+
+The example below shows distance/time for most activities, but switches to total sets/reps when the last activity is a strength-training session.
+
+**Template sensors** (add to your `configuration.yaml` or a `template:` block):
+
+```yaml
+template:
+  - sensor:
+      - name: last_activity_primary
+        unique_id: last_activity_primary
+        state: >
+          {% set act = state_attr('sensor.last_activity', 'ActivityType') %}
+          {% if act == 'strength_training' %}
+            {{ state_attr('sensor.last_activity', 'total_sets') | int(0) }} sets
+          {% else %}
+            {{ (state_attr('sensor.last_activity', 'distance') | float(0) / 1000) | round(1) }} km
+          {% endif %}
+
+      - name: last_activity_secondary
+        unique_id: last_activity_secondary
+        state: >
+          {% set act = state_attr('sensor.last_activity', 'ActivityType') %}
+          {% if act == 'strength_training' %}
+            {{ state_attr('sensor.last_activity', 'total_reps') | int(0) }} reps
+          {% else %}
+            {{ (state_attr('sensor.last_activity', 'elapsed_time') | int(0) // 60) }} min
+          {% endif %}
+```
+
+**Card config** (Lovelace dashboard):
+
+```yaml
+type: custom:rh-map-card
+entity: sensor.last_activity
+polyline_attribute: summary_polyline
+title: Last Activity
+icon: mdi:run
+primary: "{{ states('sensor.last_activity_primary') }}"
+secondary: "{{ states('sensor.last_activity_secondary') }}"
+color: var(--primary-color)
+show_map: true
+zoom: 13
+```
+
+Replace `sensor.last_activity` with your own activity sensor (e.g. from the Strava or Garmin integrations) and adjust the attribute names to match the attributes it exposes.
 
 ## Notes
 
